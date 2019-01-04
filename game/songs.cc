@@ -18,8 +18,11 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
-#include <cpprest/json.h>
 #include <unicode/stsearch.h>
+
+#ifdef USE_WEBSERVER
+#include <cpprest/json.h>
+#endif
 
 Songs::Songs(Database & database, std::string const& songlist): m_songlist(songlist), m_database(database), m_order(config["songs/sort-order"].i()) {
 	m_updateTimer.setTarget(getInf()); // Using this as a simple timer counting seconds
@@ -76,6 +79,7 @@ void Songs::reload_internal() {
 	doneLoading = true;
 }
 
+#ifdef USE_WEBSERVER
 void Songs::LoadCache() {
 	fs::path songsMetaFile = getCacheDir() / "Songs-Metadata.json";
 	std::ifstream file(songsMetaFile.string());
@@ -211,6 +215,10 @@ void Songs::CacheSonglist() {
 		return;
 	}
 }
+#else 
+void Songs::LoadCache() { }
+void Songs::CacheSonglist() { }
+#endif
 
 void Songs::reload_internal(fs::path const& parent) {
 	if (std::distance(parent.begin(), parent.end()) > 20) { std::clog << "songs/info: >>> Not scanning: " << parent.string() << " (maximum depth reached, possibly due to cyclic symlinks)\n"; return; }

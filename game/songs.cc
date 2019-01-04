@@ -96,17 +96,18 @@ void Songs::LoadCache() {
     	return;
     }
 
-    auto stringList = config["paths/songs"].sl();
-
+	auto systemSongs = config["paths/system"].sl();
+    auto userSongs = config["paths/songs"].sl();
+	userSongs.insert(userSongs.begin(), systemSongs.begin(), systemSongs.end());
     for(auto const& song : jsonRoot.as_array()) {
     	struct stat buffer;
     	auto songPath = song.at("TxtFile").as_string();
     	auto isSongPathInConfiguredPaths = std::find_if(
-                                                        stringList.begin(), 
-                                                        stringList.end(), 
-														[songPath](const std::string& stringListItem) { 
-															return songPath.find(stringListItem) != std::string::npos;
-														 }) != stringList.end();
+                                                        userSongs.begin(), 
+                                                        userSongs.end(), 
+														[songPath](const std::string& userSongItem) { 
+															return songPath.find(userSongItem) != std::string::npos;
+														 }) != userSongs.end();
     	if(_STAT(songPath.c_str(), &buffer) == 0 && isSongPathInConfiguredPaths) {
     		std::shared_ptr<Song> realSong(new Song(song));
     		m_songs.push_back(realSong);
